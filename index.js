@@ -2,7 +2,10 @@ var express = require("express");
 var mysql = require("mysql");
 var app = express();
 var bodyParser = require("body-parser");
+var cors = require("cors");
 const PORT = 3000;
+
+// API Versioining ???
 
 const mySqlConn = mysql.createConnection ({
     host: 'localhost',
@@ -13,6 +16,7 @@ const mySqlConn = mysql.createConnection ({
 
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json())
+app.use(cors())
 
 app.listen(PORT, () => {
     console.log("Server is listening at port " + PORT);
@@ -43,7 +47,6 @@ app.get('/students', (req, res) => {
 })
 
 // Save Student details
-
 app.post('/student', (req, res) => {
 
     let name = req.body.name;
@@ -63,28 +66,16 @@ app.post('/student', (req, res) => {
         }
 
         if(result.length > 0) {
-            res.json({
-                data: [],
-                code: 400,
-                msg: 'Username already exists!!!'
-            });
+            res.send('Username already exists!!!');
         } else {
             let query = "INSERT INTO `tbl_students` (name, role_no, username, password, email, mobile_no, is_active, created_on) VALUES ('" +
             name + "', '" + role_no + "', '" + username + "', '" + password + "', '" + email + "', '" + mobile_no + "' , 'Y', NOW())";
 
             mySqlConn.query(query, (err, result) => {
                 if(!err) {
-                    res.json({
-                        data: [],
-                        code: 200,
-                        msg: 'data saved successfully'
-                    })
+                    res.send("Data saved");
                 } else {
-                    res.json({
-                        data: [],
-                        code: 400,
-                        msg: 'Error => ' + err
-                    })
+                    res.send("Error inserting data " + err);
                 }
             });
         }
@@ -179,3 +170,39 @@ app.delete("/student/:id", (req,res) => {
         }
     });
 }); 
+
+// Post login 
+app.get('/login/:username/:password', (req,res) => {
+
+    let username = req.params.username;
+    let password = req.params.password;
+
+    let query = "SELECT * FROM tbl_students WHERE username = '" + username + "' AND password = '" + password + "' LIMIT 1";
+
+    mySqlConn.query(query, (err, result) => {
+        if(!err) {
+
+            if(result.length > 0) {
+                res.json({
+                    data: result,
+                    code: 200,
+                    msg: 'Authenticated'
+                });
+            } else {
+                res.json({
+                    data: [],
+                    code: 400,
+                    msg: 'Unknown user'
+                });
+            }
+            
+        } else {
+            res.json({
+                data: [],
+                code: 400,
+                msg: 'Error => ' + err
+            });
+        }
+    });
+
+});
