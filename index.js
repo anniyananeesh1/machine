@@ -4,9 +4,6 @@ var app = express();
 var bodyParser = require("body-parser");
 const PORT = 3000;
 
-// API version var to be set
-// ???
-
 const mySqlConn = mysql.createConnection ({
     host: 'localhost',
     user: 'root',
